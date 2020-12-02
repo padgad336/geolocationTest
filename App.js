@@ -17,8 +17,8 @@ import { calculateDistance } from './testDisdacnt'
 const { width, height } = Dimensions.get('window')
 
 const ASPECT_RATIO = width / height
-const LATITUDE = 13.840657586778937
-const LONGITUDE = 100.51395557820797
+const LATITUDE = 13.8293156
+const LONGITUDE = 100.5292102
 const LATITUDE_DELTA = 0.0922
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO
 let id = 0
@@ -39,10 +39,11 @@ export default function App() {
     latitudeDelta: LATITUDE_DELTA,
     longitudeDelta: LONGITUDE_DELTA,
   })
+  const [permis, setPermis] = React.useState({ geo: false })
   const [gps, setGps] = React.useState(false)
   const [location, setLocation] = React.useState(false)
   const onMapPress = (e) => {
-    console.log(e?.nativeEvent)
+    // console.log(e?.nativeEvent)
     setGps(true)
     setState({
       markers: [
@@ -56,17 +57,26 @@ export default function App() {
       ],
     })
   }
-  React.useMemo(
+  React.useEffect(
     () => {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        if (result.state == 'granted') {
-          setLocation(true)
-        } else if (result.state == 'prompt') {
-          setLocation(false)
+      // console.log('in Funtion Effect')
+      // console.log('geo', navigator?.geolocation)
+      // if (!permis?.geo) {
+      navigator?.permissions?.query({ name: 'geolocation' })?.then((result) => {
+        // console.log(result)
+        if (result.state === 'granted') {
+          // console.log(result)
+          setPermis({ geo: true })
+        } else if (result.state === 'prompt') {
+          // console.log(result)
+          setPermis({ geo: true })
+        } else {
+          // console.log(result)
+          setPermis({ geo: false })
         }
-        // Don't do anything if the permission was denied.
       })
-    },
+      // }
+    }, [permis, permis?.geo],
   )
   // React.useEffect(() => {
   //   // console.log('44444', imageWidth);
@@ -91,36 +101,40 @@ export default function App() {
   // }, [fetc, fetchWeather]);
   useInterval(
     async () => {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const dis = calculateDistance({
-            latitude: 13.8292507,
-            longitude: 100.5292516,
-          }, {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          })
-          setState({
-            markers: [
-              {
-                coordinate: {
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
+      if (permis?.geo) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const dis = calculateDistance({
+              latitude: 13.8293156,
+              longitude: 100.5292102,
+            }, {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            })
+            setState({
+              markers: [
+                {
+                  coordinate: {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  },
+                  key: id++,
+                  color: randomColor(),
+                  description: `ห่าง ${dis?.toFixed(2)}เมตร`,
+                  distance: dis?.toFixed(2),
                 },
-                key: id++,
-                color: randomColor(),
-                description: `ห่าง ${dis}เมตร`,
-                distance: dis.toFixed(0),
-              },
-            ],
+              ],
+            },
+            )
           },
-          )
-        },
-        (error) => {
-          console.log(error)
-        },
-      )
-    }, 6000)
+          (error) => {
+            console.log(error)
+          },
+        )
+      } else {
+        console.log('Geolocation Permission denied')
+      }
+    }, 1000)
 
   // React.useEffect(
   //   () => {
@@ -151,7 +165,9 @@ export default function App() {
   //       setGps(false)
   //     }
   //   }, [gps, state.markers])
-  console.log(state, location)
+  // console.log(state?.markers[0]?.distance)
+  // const t = document.querySelector('#status')
+  // console.log(permis)
   return (
   // <PaperProvider>
     <View style={styles.container}>
@@ -163,12 +179,15 @@ export default function App() {
         <Marker
           key={0}
           coordinate={{
-            latitude: 13.8292507,
-            longitude: 100.5292516,
+            latitude: 13.8293156,
+            longitude: 100.5292102,
           }}
           title="My HOME"
         >
-          <View style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, padding: 10 }}>
+          <View style={{
+            backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20, padding: 10, zIndex: 0,
+          }}
+          >
             <MaterialCommunityIcons name="home-circle" size={20} color="green" />
           </View>
         </Marker>
@@ -179,9 +198,18 @@ export default function App() {
             pinColor={marker.color}
             title={marker?.description}
           >
-            <View style={{ backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 20, padding: 10 }}>
-              {/* <Badge>{marker?.distance}</Badge> */}
-              <MaterialCommunityIcons name="account" size={20} color="green" />
+            <View style={{
+              borderRadius: 20, zIndex: 1,
+            }}
+            >
+              <View style={{
+                backgroundColor: 'rgba(0,0,0,1)', color: '#ffff', borderRadius: 20, padding: 10, zIndex: 4,
+              }}
+              >
+                <Text style={{ color: '#fff' }}>{marker?.distance}</Text>
+                {/* <MaterialCommunityIcons name="account" size={20} color="green" /> */}
+              </View>
+
             </View>
           </Marker>
         ))}

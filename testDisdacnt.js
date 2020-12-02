@@ -1,5 +1,5 @@
 const calculateDistance = (gpsFirst, gpsSecond) => {
-  console.log('API CALCULATE DISTANCE ON MAP WORKING', gpsFirst, gpsSecond)
+  // console.log('API CALCULATE DISTANCE ON MAP WORKING', gpsFirst, gpsSecond)
   try {
     const BETWEEN_DEGREE = 15
     const THOUSAND_METER = 1000
